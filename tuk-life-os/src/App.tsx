@@ -1,369 +1,365 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Activity,
-  Bot,
-  CalendarDays,
-  Camera,
-  Car,
-  CheckCircle2,
-  ChevronRight,
-  Cloud,
-  Database,
-  FileText,
-  HeartPulse,
-  Home,
-  Mic,
-  Plus,
-  ReceiptText,
-  Search,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  Trash2,
-  Upload,
-  Wallet,
-  Wrench,
-  X,
-} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 import './index.css';
 
-type ModuleKey = 'dashboard' | 'timeline' | 'calendar' | 'ai' | 'health' | 'finance' | 'vehicle' | 'work' | 'profile' | 'settings';
+type NavKey =
+  | 'dashboard'
+  | 'timeline'
+  | 'calendar'
+  | 'life'
+  | 'health'
+  | 'finance'
+  | 'vehicle'
+  | 'work'
+  | 'ai'
+  | 'settings';
 
 type TimelineItem = {
-  id: string;
-  date: string;
   time: string;
+  icon: string;
+  title: string;
+  desc: string;
   type: string;
+};
+
+type Card = {
   title: string;
-  note?: string;
-  amount?: number;
-  image?: string;
+  value: string;
+  note: string;
+  icon: string;
 };
 
-type Vehicle = {
-  id: string;
-  name: string;
-  brand: string;
-  model: string;
-  year?: string;
-  plate?: string;
-  nextDue?: string;
-  note?: string;
-};
+const navItems: { key: NavKey; label: string; icon: string }[] = [
+  { key: 'dashboard', label: 'Home', icon: '🏠' },
+  { key: 'timeline', label: 'Timeline', icon: '🕒' },
+  { key: 'calendar', label: 'Calendar', icon: '📅' },
+  { key: 'life', label: 'Life Vault', icon: '🧠' },
+  { key: 'health', label: 'Health', icon: '❤️' },
+  { key: 'finance', label: 'Finance', icon: '💰' },
+  { key: 'vehicle', label: 'Vehicle', icon: '🚗' },
+  { key: 'work', label: 'Satys Work', icon: '🏭' },
+  { key: 'ai', label: 'AI', icon: '🤖' },
+  { key: 'settings', label: 'Settings', icon: '⚙️' },
+];
 
-type HealthLog = {
-  id: string;
-  date: string;
-  weight?: number;
-  calories?: number;
-  sugar?: number;
-  fat?: number;
-  protein?: number;
-  note?: string;
-};
+const focusList = ['Review Dashboard', 'Gym 21:00', 'English 30 min', 'Finance Review'];
 
-type FinanceItem = {
-  id: string;
-  date: string;
-  type: 'income' | 'expense';
-  category: string;
-  title: string;
-  amount: number;
-  note?: string;
-};
+const timeline: TimelineItem[] = [
+  { time: '06:30', icon: '⚖️', title: 'Weight Check', desc: 'Record weight and body condition', type: 'Health' },
+  { time: '08:00', icon: '🏭', title: 'Satys Work', desc: 'PM / supplier / machine follow up', type: 'Work' },
+  { time: '12:00', icon: '🍱', title: 'Lunch Log', desc: 'Use AI Camera to record food', type: 'Health' },
+  { time: '18:30', icon: '💰', title: 'Expense Review', desc: 'Scan receipt or add expense', type: 'Finance' },
+  { time: '21:00', icon: '🏋️', title: 'Workout', desc: 'Gym, walk, jump rope, Apple Watch', type: 'Health' },
+];
 
-type AppData = {
-  profile: {
-    name: string;
-    nickname: string;
-    company: string;
-    email: string;
-    phone: string;
-    address: string;
-    avatar?: string;
-  };
-  timeline: TimelineItem[];
-  vehicles: Vehicle[];
-  health: HealthLog[];
-  finance: FinanceItem[];
-  settings: {
-    googleSheetUrl: string;
-    googleDriveFolder: string;
-    imageQuality: number;
-    syncStatus: string;
-    darkMode: boolean;
-  };
-};
+const cards: Card[] = [
+  { title: 'Health', value: '62.2 kg', note: 'Target: lean body / calories tracking', icon: '❤️' },
+  { title: 'Finance', value: '฿81,000', note: 'Income base / expense sync soon', icon: '💰' },
+  { title: 'Vehicles', value: '2 cars', note: 'BYD Seal 7 + Honda City 2010', icon: '🚗' },
+  { title: 'Satys Work', value: '4 focus', note: 'Machine, PM, supplier, project', icon: '🏭' },
+];
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
-const nowTime = () => new Date().toTimeString().slice(0, 5);
-const uid = (prefix = 'ID') => `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 7)}`;
-
-const defaultData: AppData = {
-  profile: {
-    name: 'Apirak Mueanmanas',
-    nickname: 'TUK',
-    company: 'Satys Electric Thailand',
-    email: 'apirakzaa@gmail.com',
-    phone: '',
-    address: '',
-  },
-  vehicles: [
-    { id: 'VEH-001', name: 'BYD Seal 7', brand: 'BYD', model: 'Seal 7', year: '2025', note: 'Black EV' },
-    { id: 'VEH-002', name: 'Honda City', brand: 'Honda', model: 'City', year: '2010', note: 'Daily / backup car' },
-  ],
-  health: [
-    { id: 'HLT-001', date: todayISO(), weight: 62.2, calories: 0, note: 'Latest starting value' },
-  ],
-  finance: [
-    { id: 'FIN-001', date: todayISO(), type: 'income', category: 'Salary', title: 'Monthly income', amount: 81000 },
-  ],
-  timeline: [
-    { id: 'TIM-001', date: todayISO(), time: '08:00', type: 'work', title: 'Satys Work', note: 'Review daily dashboard and PM tasks' },
-    { id: 'TIM-002', date: todayISO(), time: '21:00', type: 'health', title: 'Workout', note: 'Gym / cardio / English after workout' },
-  ],
-  settings: {
-    googleSheetUrl: '',
-    googleDriveFolder: '',
-    imageQuality: 0.72,
-    syncStatus: 'Local only',
-    darkMode: true,
-  },
-};
-
-function loadData(): AppData {
-  try {
-    const raw = localStorage.getItem('tuk-life-os-v6');
-    if (!raw) return defaultData;
-    return { ...defaultData, ...JSON.parse(raw) };
-  } catch {
-    return defaultData;
-  }
-}
-
-function saveData(data: AppData) {
-  localStorage.setItem('tuk-life-os-v6', JSON.stringify(data));
-}
-
-function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
-  return (
-    <div className="stat-card">
-      <div className="stat-icon">{icon}</div>
-      <div>
-        <p className="muted">{label}</p>
-        <h3>{value}</h3>
-        {sub && <small>{sub}</small>}
-      </div>
-    </div>
-  );
-}
-
-function Section({ title, icon, children, action }: { title: string; icon?: React.ReactNode; children: React.ReactNode; action?: React.ReactNode }) {
-  return (
-    <section className="panel">
-      <div className="section-head">
-        <div className="section-title">{icon}{title}</div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function EmptyState({ title, text }: { title: string; text: string }) {
-  return <div className="empty"><Sparkles size={18} /><b>{title}</b><span>{text}</span></div>;
-}
+const vaultItems = [
+  ['👤', 'Profile', 'Name, age, address, phone, emergency data'],
+  ['🏠', 'Places', 'Home, condo, work, rental rooms'],
+  ['🚗', 'Vehicles', 'Cars, insurance, tax, mileage, service history'],
+  ['💳', 'Accounts', 'Bank, card, debt, investment, assets'],
+  ['📄', 'Documents', 'Receipts, PDF, warranty, contracts'],
+  ['👥', 'People', 'Family, supplier, friends, emergency contacts'],
+];
 
 function App() {
-  const [active, setActive] = useState<ModuleKey>('dashboard');
-  const [data, setData] = useState<AppData>(loadData);
-  const [query, setQuery] = useState('');
+  const [active, setActive] = useState<NavKey>('dashboard');
   const [quickOpen, setQuickOpen] = useState(false);
 
-  useEffect(() => saveData(data), [data]);
-  useEffect(() => {
-    document.documentElement.dataset.theme = data.settings.darkMode ? 'dark' : 'light';
-  }, [data.settings.darkMode]);
-
-  const totalIncome = useMemo(() => data.finance.filter(x => x.type === 'income').reduce((s, x) => s + x.amount, 0), [data.finance]);
-  const totalExpense = useMemo(() => data.finance.filter(x => x.type === 'expense').reduce((s, x) => s + x.amount, 0), [data.finance]);
-  const latestWeight = data.health.slice().sort((a, b) => b.date.localeCompare(a.date))[0]?.weight;
-  const todayTimeline = data.timeline.filter(x => x.date === todayISO()).sort((a, b) => a.time.localeCompare(b.time));
-
-  const addTimeline = (item: Partial<TimelineItem>) => {
-    const next: TimelineItem = {
-      id: uid('TIM'),
-      date: item.date || todayISO(),
-      time: item.time || nowTime(),
-      type: item.type || 'note',
-      title: item.title || 'New item',
-      note: item.note || '',
-      amount: item.amount,
-      image: item.image,
-    };
-    setData(prev => ({ ...prev, timeline: [next, ...prev.timeline] }));
-  };
-
-  const exportBackup = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `tuk-life-os-backup-${todayISO()}.json`;
-    a.click();
-  };
-
-  const importBackup = async (file: File) => {
-    const text = await file.text();
-    const parsed = JSON.parse(text);
-    setData({ ...defaultData, ...parsed });
-  };
-
-  const nav = [
-    ['dashboard', Home, 'Home'], ['timeline', CalendarDays, 'Timeline'], ['ai', Bot, 'AI'], ['health', HeartPulse, 'Health'], ['finance', Wallet, 'Finance'], ['vehicle', Car, 'Vehicle'], ['work', Wrench, 'Satys'], ['profile', ShieldCheck, 'Profile'], ['settings', Settings, 'Settings'],
-  ] as const;
+  const currentTitle = useMemo(() => navItems.find((item) => item.key === active)?.label ?? 'Dashboard', [active]);
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><div className="logo">T</div><div><b>TUK LIFE OS</b><small>v6.0 Professional</small></div></div>
-        <nav>
-          {nav.map(([key, Icon, label]) => <button key={key} className={active === key ? 'active' : ''} onClick={() => setActive(key)}><Icon size={19} />{label}</button>)}
+        <div className="brand">
+          <div className="brand-logo">T</div>
+          <div>
+            <h1>TUK LIFE OS</h1>
+            <p>v6 Sprint 2</p>
+          </div>
+        </div>
+
+        <nav className="side-nav">
+          {navItems.map((item) => (
+            <button key={item.key} onClick={() => setActive(item.key)} className={active === item.key ? 'active' : ''}>
+              <span>{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
         </nav>
+
+        <div className="sync-card">
+          <p>Cloud Status</p>
+          <strong>Google Sheets Ready</strong>
+          <span>Drive image compression planned</span>
+        </div>
       </aside>
 
-      <main className="main">
+      <main className="main-area">
         <header className="topbar">
           <div>
-            <p className="muted">Good {new Date().getHours() < 18 ? 'Day' : 'Evening'}, {data.profile.nickname}</p>
-            <h1>{active === 'dashboard' ? 'Personal Operating System' : nav.find(([k]) => k === active)?.[2]}</h1>
+            <p className="eyebrow">Personal Operating System</p>
+            <h2>{currentTitle}</h2>
           </div>
-          <div className="searchbox"><Search size={18} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Ask AI or search BYD, expense, food, Satys..." /></div>
+          <div className="top-actions">
+            <button className="ghost">🔍 Search</button>
+            <button className="primary" onClick={() => setActive('ai')}>🤖 Ask AI</button>
+          </div>
         </header>
 
-        {active === 'dashboard' && <Dashboard data={data} totalIncome={totalIncome} totalExpense={totalExpense} latestWeight={latestWeight} todayTimeline={todayTimeline} setActive={setActive} />}
-        {active === 'timeline' && <Timeline data={data} setData={setData} addTimeline={addTimeline} />}
-        {active === 'calendar' && <CalendarPage data={data} />}
-        {active === 'ai' && <AIPage data={data} setData={setData} addTimeline={addTimeline} />}
-        {active === 'health' && <HealthPage data={data} setData={setData} addTimeline={addTimeline} />}
-        {active === 'finance' && <FinancePage data={data} setData={setData} addTimeline={addTimeline} />}
-        {active === 'vehicle' && <VehiclePage data={data} setData={setData} addTimeline={addTimeline} />}
-        {active === 'work' && <WorkPage addTimeline={addTimeline} data={data} />}
-        {active === 'profile' && <ProfilePage data={data} setData={setData} />}
-        {active === 'settings' && <SettingsPage data={data} setData={setData} exportBackup={exportBackup} importBackup={importBackup} />}
+        {active === 'dashboard' && <Dashboard onGo={setActive} />}
+        {active === 'timeline' && <Timeline />}
+        {active === 'calendar' && <Calendar />}
+        {active === 'life' && <LifeVault />}
+        {active === 'health' && <ModulePage icon="❤️" title="Health" subtitle="Food, calories, weight, exercise, sleep" />}
+        {active === 'finance' && <ModulePage icon="💰" title="Finance" subtitle="Income, expense, debt, budget, receipt AI" />}
+        {active === 'vehicle' && <ModulePage icon="🚗" title="Vehicle" subtitle="BYD Seal 7, Honda City, service, tax, insurance" />}
+        {active === 'work' && <ModulePage icon="🏭" title="Satys Work" subtitle="PM, BM, machine, supplier, PO, projects" />}
+        {active === 'ai' && <AIPage />}
+        {active === 'settings' && <Settings />}
       </main>
 
-      <button className="fab" onClick={() => setQuickOpen(true)}><Plus /></button>
-      {quickOpen && <QuickAdd close={() => setQuickOpen(false)} addTimeline={addTimeline} setActive={setActive} />}
+      <button className="fab" onClick={() => setQuickOpen(!quickOpen)}>＋</button>
+      {quickOpen && <QuickAdd onClose={() => setQuickOpen(false)} />}
 
       <nav className="bottom-nav">
-        {(['dashboard', 'timeline', 'ai', 'health', 'settings'] as ModuleKey[]).map(k => {
-          const item = nav.find(([key]) => key === k)!;
-          const Icon = item[1];
-          return <button key={k} className={active === k ? 'active' : ''} onClick={() => setActive(k)}><Icon size={20} /><span>{item[2]}</span></button>;
-        })}
+        {navItems.slice(0, 5).map((item) => (
+          <button key={item.key} onClick={() => setActive(item.key)} className={active === item.key ? 'active' : ''}>
+            <span>{item.icon}</span>
+            <small>{item.label}</small>
+          </button>
+        ))}
       </nav>
     </div>
   );
 }
 
-function Dashboard({ data, totalIncome, totalExpense, latestWeight, todayTimeline, setActive }: any) {
-  return <div className="grid-page">
-    <section className="hero-card">
-      <div><p className="pill">AI DAILY BRIEF</p><h2>วันนี้โฟกัสงานสำคัญ สุขภาพ และฐานข้อมูลชีวิต</h2><p>Dashboard นี้จะเป็นศูนย์กลางของ Health, Finance, Vehicle, Satys Work, Timeline และ Google Sheets.</p></div>
-      <button onClick={() => setActive('ai')}>Open AI <ChevronRight size={16}/></button>
+function Dashboard({ onGo }: { onGo: (key: NavKey) => void }) {
+  return (
+    <section className="page-stack">
+      <div className="hero-card">
+        <div>
+          <p className="eyebrow">Good Evening, TUK</p>
+          <h1>Today Command Center</h1>
+          <p>Dashboard นี้เป็น Sprint 2 ถ้าเห็นหน้านี้ แปลว่าโค้ดใหม่ถูกติดตั้งแล้ว ✅</p>
+        </div>
+        <div className="hero-actions">
+          <button onClick={() => onGo('ai')}>🎤 Voice AI</button>
+          <button onClick={() => onGo('ai')}>📷 AI Camera</button>
+        </div>
+      </div>
+
+      <div className="focus-grid">
+        <div className="panel large">
+          <div className="panel-title">
+            <h3>🔥 Today's Focus</h3>
+            <button onClick={() => onGo('timeline')}>View Timeline</button>
+          </div>
+          <div className="focus-list">
+            {focusList.map((item, index) => (
+              <div className="focus-item" key={item}>
+                <span>{index + 1}</span>
+                <p>{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="panel ai-summary">
+          <h3>🤖 AI Summary</h3>
+          <p>วันนี้ควรโฟกัสงาน Satys ก่อน 17:00 แล้วค่อยบันทึกอาหาร/ออกกำลังกายตอนเย็น ระบบ Google Sheets จะเป็นฐานข้อมูลหลักใน Sprint ถัดไป</p>
+        </div>
+      </div>
+
+      <div className="metric-grid">
+        {cards.map((card) => (
+          <div className="metric-card" key={card.title}>
+            <span className="metric-icon">{card.icon}</span>
+            <p>{card.title}</p>
+            <strong>{card.value}</strong>
+            <small>{card.note}</small>
+          </div>
+        ))}
+      </div>
+
+      <div className="split-grid">
+        <Timeline compact />
+        <div className="panel">
+          <div className="panel-title">
+            <h3>⚡ Quick Actions</h3>
+          </div>
+          <div className="quick-grid">
+            {['Add Timeline', 'Add Expense', 'Add Weight', 'Scan Food', 'Scan Receipt', 'Open Settings'].map((action) => (
+              <button key={action}>{action}</button>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
-    <div className="stats-grid">
-      <StatCard icon={<HeartPulse/>} label="Weight" value={latestWeight ? `${latestWeight} kg` : '-'} sub="latest log" />
-      <StatCard icon={<Wallet/>} label="Balance" value={`${(totalIncome - totalExpense).toLocaleString()} ฿`} sub="local database" />
-      <StatCard icon={<Car/>} label="Vehicles" value={`${data.vehicles.length}`} sub="cars in vault" />
-      <StatCard icon={<CalendarDays/>} label="Today" value={`${todayTimeline.length}`} sub="timeline items" />
+  );
+}
+
+function Timeline({ compact = false }: { compact?: boolean }) {
+  return (
+    <section className={compact ? 'panel' : 'page-stack'}>
+      <div className="panel-title">
+        <h3>🕒 Today Timeline</h3>
+        <button>+ Add Event</button>
+      </div>
+      <div className="timeline-list">
+        {timeline.map((item) => (
+          <article className="timeline-item" key={`${item.time}-${item.title}`}>
+            <div className="time">{item.time}</div>
+            <div className="dot">{item.icon}</div>
+            <div>
+              <strong>{item.title}</strong>
+              <p>{item.desc}</p>
+              <span>{item.type}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Calendar() {
+  const days = Array.from({ length: 30 }, (_, i) => i + 1);
+  return (
+    <section className="page-stack">
+      <div className="panel-title standalone">
+        <h3>📅 Life Calendar</h3>
+        <button>June 2026</button>
+      </div>
+      <div className="calendar-grid">
+        {days.map((day) => (
+          <div className="calendar-day" key={day}>
+            <strong>{day}</strong>
+            <span>{day % 3 === 0 ? '❤️ 💰' : day % 5 === 0 ? '🚗 🏭' : '📝'}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LifeVault() {
+  return (
+    <section className="page-stack">
+      <div className="hero-card small">
+        <div>
+          <p className="eyebrow">Life Database</p>
+          <h1>Life Vault</h1>
+          <p>คลังข้อมูลชีวิตที่ AI จะใช้ตอบคำถาม เช่น รถ ที่อยู่ เอกสาร การเงิน สุขภาพ และงาน</p>
+        </div>
+      </div>
+      <div className="vault-grid">
+        {vaultItems.map(([icon, title, desc]) => (
+          <div className="vault-card" key={title}>
+            <span>{icon}</span>
+            <strong>{title}</strong>
+            <p>{desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ModulePage({ icon, title, subtitle }: { icon: string; title: string; subtitle: string }) {
+  return (
+    <section className="page-stack">
+      <div className="hero-card small">
+        <div>
+          <p className="eyebrow">Module</p>
+          <h1>{icon} {title}</h1>
+          <p>{subtitle}</p>
+        </div>
+      </div>
+      <div className="module-grid">
+        <div className="panel">
+          <h3>Database</h3>
+          <p>เพิ่ม / แก้ไข / ลบ / Sync Google Sheets</p>
+        </div>
+        <div className="panel">
+          <h3>Timeline Link</h3>
+          <p>ทุกข้อมูลจะลง Timeline และ Calendar</p>
+        </div>
+        <div className="panel">
+          <h3>AI Assistant</h3>
+          <p>ถาม AI ได้จากข้อมูลจริงในโมดูลนี้</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AIPage() {
+  return (
+    <section className="page-stack">
+      <div className="hero-card small">
+        <div>
+          <p className="eyebrow">AI Command</p>
+          <h1>🤖 Ask Your Life OS</h1>
+          <p>พิมพ์ พูด ถ่ายรูป หรือสแกนบิล เพื่อบันทึกข้อมูลลงระบบ</p>
+        </div>
+      </div>
+      <div className="ai-console">
+        <div className="chat-bubble ai">สวัสดี TUK วันนี้ต้องการให้ผมช่วยบันทึกอะไร?</div>
+        <div className="ai-input-row">
+          <button>🎤</button>
+          <input placeholder="เช่น วันนี้กินข้าวมันไก่ / ฉันมีรถกี่คัน" />
+          <button>📷</button>
+          <button className="primary">Send</button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Settings() {
+  return (
+    <section className="page-stack">
+      <div className="settings-grid">
+        {[
+          ['👤 Profile & Account', 'Name, photo, address, emergency data'],
+          ['☁️ Google Sync', 'Sheets, Drive, backup, last sync'],
+          ['🤖 AI Settings', 'Voice, camera, language, privacy'],
+          ['🔐 Security', 'PIN, Face ID, private modules'],
+          ['📲 PWA', 'Install app, offline cache, notification'],
+          ['🎨 Theme', 'Dark, glass, compact, premium'],
+        ].map(([title, desc]) => (
+          <div className="panel" key={title}>
+            <h3>{title}</h3>
+            <p>{desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function QuickAdd({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="quick-modal">
+      <div className="quick-sheet">
+        <div className="panel-title">
+          <h3>Quick Add</h3>
+          <button onClick={onClose}>Close</button>
+        </div>
+        <div className="quick-grid">
+          {['Food Photo', 'Receipt', 'Expense', 'Weight', 'Vehicle', 'Work Task', 'Journal', 'Document'].map((item) => (
+            <button key={item}>{item}</button>
+          ))}
+        </div>
+      </div>
     </div>
-    <div className="two-col">
-      <Section title="Today Timeline" icon={<CalendarDays/>}>{todayTimeline.length ? todayTimeline.map((x: TimelineItem) => <div className="row" key={x.id}><span className="time">{x.time}</span><div><b>{x.title}</b><small>{x.note}</small></div></div>) : <EmptyState title="No timeline" text="Add first item from + button" />}</Section>
-      <Section title="Quick Actions" icon={<Sparkles/>}><div className="quick-grid"><button onClick={() => setActive('health')}>Add Weight</button><button onClick={() => setActive('finance')}>Add Expense</button><button onClick={() => setActive('vehicle')}>Add Vehicle</button><button onClick={() => setActive('ai')}>AI Camera</button></div></Section>
-    </div>
-  </div>;
-}
-
-function Timeline({ data, setData, addTimeline }: { data: AppData; setData: React.Dispatch<React.SetStateAction<AppData>>; addTimeline: any }) {
-  const [title, setTitle] = useState('');
-  const remove = (id: string) => setData(p => ({ ...p, timeline: p.timeline.filter(x => x.id !== id) }));
-  return <div className="grid-page"><Section title="Add Timeline" icon={<Plus/>}><div className="form-row"><input value={title} onChange={e => setTitle(e.target.value)} placeholder="เช่น กินข้าว, PM Machine, เติมไฟรถ"/><button onClick={() => { addTimeline({ title, type: 'manual' }); setTitle(''); }}>Save</button></div></Section><Section title="All Timeline" icon={<CalendarDays/>}>{data.timeline.map(x => <div className="row timeline-row" key={x.id}><span className="time">{x.date}<br/>{x.time}</span>{x.image && <img src={x.image} /> }<div><b>{x.title}</b><small>{x.note || x.type}</small></div><button className="icon-btn" onClick={() => remove(x.id)}><Trash2 size={16}/></button></div>)}</Section></div>;
-}
-
-function CalendarPage({ data }: { data: AppData }) {
-  const grouped = data.timeline.reduce((acc, item) => { acc[item.date] = (acc[item.date] || 0) + 1; return acc; }, {} as Record<string, number>);
-  return <Section title="Life Calendar" icon={<CalendarDays/>}><div className="calendar-grid">{Array.from({ length: 30 }).map((_, i) => { const d = new Date(); d.setDate(d.getDate() - 14 + i); const key = d.toISOString().slice(0,10); return <div className="day" key={key}><b>{d.getDate()}</b><small>{key.slice(5)}</small>{grouped[key] && <span>{grouped[key]} items</span>}</div>; })}</div></Section>;
-}
-
-function AIPage({ data, setData, addTimeline }: { data: AppData; setData: React.Dispatch<React.SetStateAction<AppData>>; addTimeline: any }) {
-  const [answer, setAnswer] = useState('ถามผมได้ เช่น “ฉันมีรถกี่คัน”, “วันนี้กินอะไร”, “สรุปการเงิน”');
-  const fileRef = useRef<HTMLInputElement>(null);
-  const ask = (q: string) => {
-    const lower = q.toLowerCase();
-    if (lower.includes('รถ')) setAnswer(`คุณมีรถ ${data.vehicles.length} คัน: ${data.vehicles.map(v => v.name).join(', ')}`);
-    else if (lower.includes('เงิน') || lower.includes('expense')) setAnswer(`มีรายการการเงิน ${data.finance.length} รายการ รายรับ/รายจ่ายจะเชื่อม Google Sheets ใน Sprint ถัดไป`);
-    else if (lower.includes('น้ำหนัก')) setAnswer(`น้ำหนักล่าสุด ${data.health[0]?.weight || '-'} kg`);
-    else setAnswer('AI Local Mode: ผมจะอ่านจากฐานข้อมูลในเครื่องก่อน และต่อไปจะเชื่อม Google Sheets + AI Vision');
-  };
-  const onImage = async (file: File) => {
-    const compressed = await compressImage(file, data.settings.imageQuality);
-    addTimeline({ title: 'AI Camera Capture', type: 'media', note: 'รูปถูกบีบอัดแล้วเพื่อประหยัดพื้นที่ Google Drive', image: compressed });
-    setAnswer('บันทึกรูปลง Timeline แล้ว ต่อไปจะเพิ่ม OCR วิเคราะห์อาหาร/บิลและ Sync Google Drive');
-  };
-  return <div className="grid-page"><Section title="AI Assistant" icon={<Bot/>}><div className="ai-box"><p>{answer}</p><div className="form-row"><input placeholder="พิมพ์คำถามถึง AI" onKeyDown={e => { if (e.key === 'Enter') ask((e.target as HTMLInputElement).value); }} /><button onClick={() => ask('ฉันมีรถกี่คัน')}>Ask</button></div><div className="quick-grid"><button onClick={() => fileRef.current?.click()}><Camera size={16}/> AI Camera</button><button onClick={() => setAnswer('Voice AI พร้อมวางโครงสร้างแล้ว ต้องเปิดสิทธิ์ไมค์บน HTTPS/PWA') }><Mic size={16}/> Voice</button><button><ReceiptText size={16}/> Receipt</button></div><input ref={fileRef} type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && onImage(e.target.files[0])} /></div></Section></div>;
-}
-
-function HealthPage({ data, setData, addTimeline }: any) {
-  const [weight, setWeight] = useState('');
-  const add = () => { const item = { id: uid('HLT'), date: todayISO(), weight: Number(weight), calories: 0, note: 'Manual log' }; setData((p: AppData) => ({ ...p, health: [item, ...p.health] })); addTimeline({ title: `Weight ${weight} kg`, type: 'health' }); setWeight(''); };
-  return <div className="grid-page"><Section title="Health Log" icon={<HeartPulse/>}><div className="form-row"><input value={weight} onChange={e => setWeight(e.target.value)} placeholder="น้ำหนัก kg"/><button onClick={add}>Save</button></div>{data.health.map((h: HealthLog) => <div className="row" key={h.id}><b>{h.date}</b><span>{h.weight || '-'} kg</span><small>{h.note}</small></div>)}</Section></div>;
-}
-
-function FinancePage({ data, setData, addTimeline }: any) {
-  const [title, setTitle] = useState(''); const [amount, setAmount] = useState('');
-  const add = (type: 'income'|'expense') => { const item = { id: uid('FIN'), date: todayISO(), type, category: type, title, amount: Number(amount), note: '' }; setData((p: AppData) => ({ ...p, finance: [item, ...p.finance] })); addTimeline({ title: `${type}: ${title}`, type: 'finance', amount: Number(amount) }); setTitle(''); setAmount(''); };
-  return <div className="grid-page"><Section title="Finance" icon={<Wallet/>}><div className="form-row"><input value={title} onChange={e => setTitle(e.target.value)} placeholder="รายการ เช่น 7-Eleven"/><input value={amount} onChange={e => setAmount(e.target.value)} placeholder="จำนวนเงิน"/><button onClick={() => add('expense')}>Expense</button><button onClick={() => add('income')}>Income</button></div>{data.finance.map((f: FinanceItem) => <div className="row" key={f.id}><b>{f.title}</b><span>{f.amount.toLocaleString()} ฿</span><small>{f.type} · {f.date}</small></div>)}</Section></div>;
-}
-
-function VehiclePage({ data, setData, addTimeline }: any) {
-  const [name, setName] = useState('');
-  const add = () => { const item = { id: uid('VEH'), name, brand: '', model: '', note: '' }; setData((p: AppData) => ({ ...p, vehicles: [item, ...p.vehicles] })); addTimeline({ title: `Add vehicle: ${name}`, type: 'vehicle' }); setName(''); };
-  return <div className="grid-page"><Section title="Vehicles" icon={<Car/>}><div className="form-row"><input value={name} onChange={e => setName(e.target.value)} placeholder="เพิ่มรถ เช่น BYD Seal 7"/><button onClick={add}>Add</button></div>{data.vehicles.map((v: Vehicle) => <div className="vehicle-card" key={v.id}><Car/><div><b>{v.name}</b><small>{v.brand} {v.model} {v.year}</small><p>{v.note}</p></div></div>)}</Section></div>;
-}
-
-function WorkPage({ addTimeline }: any) {
-  return <div className="grid-page"><Section title="Satys Work Center" icon={<Wrench/>}><div className="quick-grid"><button onClick={() => addTimeline({ title: 'PM Machine', type: 'work' })}>PM Machine</button><button onClick={() => addTimeline({ title: 'Supplier Follow-up', type: 'work' })}>Supplier</button><button onClick={() => addTimeline({ title: 'PO Review', type: 'work' })}>PO</button><button onClick={() => addTimeline({ title: 'Machine Issue', type: 'work' })}>BM/Repair</button></div></Section></div>;
-}
-
-function ProfilePage({ data, setData }: any) {
-  const p = data.profile;
-  const update = (k: string, v: string) => setData((d: AppData) => ({ ...d, profile: { ...d.profile, [k]: v } }));
-  return <div className="grid-page"><Section title="Life Profile" icon={<ShieldCheck/>}><div className="profile-card"><div className="avatar">{p.nickname.slice(0,1)}</div><div className="form-stack"><input value={p.name} onChange={e => update('name', e.target.value)} /><input value={p.nickname} onChange={e => update('nickname', e.target.value)} /><input value={p.company} onChange={e => update('company', e.target.value)} /><input value={p.email} onChange={e => update('email', e.target.value)} /><textarea value={p.address} onChange={e => update('address', e.target.value)} placeholder="ที่อยู่ / Life Database" /></div></div></Section></div>;
-}
-
-function SettingsPage({ data, setData, exportBackup, importBackup }: any) {
-  return <div className="grid-page"><Section title="Settings & Cloud" icon={<Settings/>}><div className="settings-list"><label>Google Sheet URL<input value={data.settings.googleSheetUrl} onChange={e => setData((p: AppData) => ({...p, settings:{...p.settings, googleSheetUrl:e.target.value}}))} placeholder="Paste Apps Script / Sheet URL" /></label><label>Google Drive Folder<input value={data.settings.googleDriveFolder} onChange={e => setData((p: AppData) => ({...p, settings:{...p.settings, googleDriveFolder:e.target.value}}))} placeholder="Drive folder link" /></label><label>Image Quality<input type="range" min="0.35" max="0.9" step="0.05" value={data.settings.imageQuality} onChange={e => setData((p: AppData) => ({...p, settings:{...p.settings, imageQuality:Number(e.target.value)}}))}/></label><button onClick={() => setData((p: AppData) => ({...p, settings:{...p.settings, darkMode:!p.settings.darkMode}}))}>Toggle Theme</button><button onClick={exportBackup}><Cloud size={16}/> Export Backup</button><label className="upload-btn"><Upload size={16}/> Import Backup<input type="file" hidden accept="application/json" onChange={e => e.target.files?.[0] && importBackup(e.target.files[0])}/></label></div></Section></div>;
-}
-
-function QuickAdd({ close, addTimeline, setActive }: any) {
-  return <div className="modal-backdrop"><div className="modal"><button className="close" onClick={close}><X/></button><h2>Quick Add</h2><div className="quick-grid"><button onClick={() => { addTimeline({ title: 'New Note', type: 'note' }); close(); }}>Timeline</button><button onClick={() => { setActive('finance'); close(); }}>Expense</button><button onClick={() => { setActive('health'); close(); }}>Health</button><button onClick={() => { setActive('ai'); close(); }}>AI Camera</button></div></div></div>;
-}
-
-async function compressImage(file: File, quality = 0.72): Promise<string> {
-  const img = new Image();
-  const reader = new FileReader();
-  const dataUrl = await new Promise<string>((resolve) => { reader.onload = () => resolve(reader.result as string); reader.readAsDataURL(file); });
-  img.src = dataUrl;
-  await new Promise(resolve => { img.onload = resolve; });
-  const max = 1600;
-  const scale = Math.min(1, max / Math.max(img.width, img.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(img.width * scale);
-  canvas.height = Math.round(img.height * scale);
-  const ctx = canvas.getContext('2d')!;
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', quality);
+  );
 }
 
 export default App;
