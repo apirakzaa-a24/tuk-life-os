@@ -36,7 +36,7 @@ const calendarDays = [
   { day: 'Tue', date: '23', focus: 'Finance', status: 'done' },
   { day: 'Wed', date: '24', focus: 'Vehicle', status: 'done' },
   { day: 'Thu', date: '25', focus: 'AI Build', status: 'active' },
-  { day: 'Fri', date: '26', focus: 'Sprint 4', status: 'active' },
+  { day: 'Fri', date: '26', focus: 'Sprint 5', status: 'active' },
   { day: 'Sat', date: '27', focus: 'Health', status: 'todo' },
   { day: 'Sun', date: '28', focus: 'Planning', status: 'todo' },
 ];
@@ -54,7 +54,7 @@ function App() {
           <div className="brand-icon">T</div>
           <div>
             <h1>TUK LIFE OS</h1>
-            <p>v6 Sprint 4 Calendar + Timeline</p>
+            <p>v6 Sprint 5 Health + Finance</p>
           </div>
         </div>
         <nav className="side-nav">
@@ -70,9 +70,9 @@ function App() {
       <section className="content">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Sprint 4 installed ✅</p>
+            <p className="eyebrow">Sprint 5 installed ✅</p>
             <h2>{activeTitle}</h2>
-            <span>Dashboard นี้เป็น Sprint 4 ถ้าเห็นหน้านี้ แปลว่าโค้ดใหม่ถูกติดตั้งแล้ว ✅</span>
+            <span>Dashboard นี้เป็น Sprint 5 ถ้าเห็นหน้านี้ แปลว่าโค้ดใหม่ถูกติดตั้งแล้ว ✅</span>
           </div>
           <div className="top-actions">
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ถาม AI / ค้นหาชีวิต..." />
@@ -158,14 +158,14 @@ function CalendarView() {
   return (
     <div className="page-stack">
       <section className="panel wide">
-        <p className="eyebrow">Sprint 4 Feature</p>
+        <p className="eyebrow">Sprint 5 Feature</p>
         <h3>📅 Smart Calendar</h3>
         <p>ปฏิทินสำหรับดูย้อนหลัง บันทึกเป้าหมาย งาน สุขภาพ การเงิน รถ และ Timeline รายวัน</p>
         <div className="month-grid">
           {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => (
             <button key={date} className={date === 26 ? 'today' : date % 5 === 0 ? 'has-event' : ''}>
               <strong>{date}</strong>
-              <span>{date === 26 ? 'Sprint 4' : date % 5 === 0 ? 'Event' : ''}</span>
+              <span>{date === 26 ? 'Sprint 5' : date % 5 === 0 ? 'Event' : ''}</span>
             </button>
           ))}
         </div>
@@ -180,7 +180,7 @@ function TimelineView() {
       <section className="panel wide">
         <div className="section-head">
           <div>
-            <p className="eyebrow">Sprint 4 Feature</p>
+            <p className="eyebrow">Sprint 5 Feature</p>
             <h3>🕒 Life Timeline</h3>
           </div>
           <button>+ Add Timeline</button>
