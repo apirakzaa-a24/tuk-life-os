@@ -1,65 +1,279 @@
 import React, { useMemo, useState } from 'react';
 import './index.css';
 
-type ViewKey = 'dashboard' | 'calendar' | 'timeline' | 'life' | 'health' | 'finance' | 'vehicle' | 'work' | 'ai' | 'settings';
+type NavKey = 'dashboard' | 'vehicle' | 'work' | 'timeline' | 'settings';
 
-type TimelineItem = {
-  id: number;
-  time: string;
-  title: string;
-  type: string;
-  note: string;
+type Vehicle = {
+  id: string;
+  name: string;
+  model: string;
+  status: string;
+  nextService: string;
+  cost: string;
 };
 
-const navItems: { key: ViewKey; label: string; icon: string }[] = [
-  { key: 'dashboard', label: 'Dashboard', icon: '🏠' },
-  { key: 'calendar', label: 'Calendar', icon: '📅' },
-  { key: 'timeline', label: 'Timeline', icon: '🕒' },
-  { key: 'life', label: 'Life Vault', icon: '🧬' },
-  { key: 'health', label: 'Health', icon: '❤️' },
-  { key: 'finance', label: 'Finance', icon: '💰' },
-  { key: 'vehicle', label: 'Vehicle', icon: '🚗' },
-  { key: 'work', label: 'Satys Work', icon: '🏭' },
-  { key: 'ai', label: 'AI Center', icon: '🤖' },
-  { key: 'settings', label: 'Settings', icon: '⚙️' },
+type Machine = {
+  id: string;
+  name: string;
+  area: string;
+  status: string;
+  nextPm: string;
+};
+
+const vehicles: Vehicle[] = [
+  { id: 'VEH-001', name: 'BYD Seal 7', model: 'EV • Black', status: 'Active', nextService: 'Check tires / software', cost: '฿17,796/mo' },
+  { id: 'VEH-002', name: 'Honda City 2010', model: 'Dual Fuel', status: 'Active', nextService: 'Insurance / tax check', cost: '฿4,851/mo' },
 ];
 
-const timeline: TimelineItem[] = [
-  { id: 1, time: '08:00', title: 'Satys work start', type: 'Work', note: 'Maintenance / supplier / machine follow-up' },
-  { id: 2, time: '12:00', title: 'Lunch & food log', type: 'Health', note: 'Save calories and photo to Timeline' },
-  { id: 3, time: '17:00', title: 'Finance review', type: 'Finance', note: 'Expense, debt, daily balance' },
-  { id: 4, time: '21:00', title: 'Gym / cardio', type: 'Health', note: 'Workout and Apple Watch calories' },
+const machines: Machine[] = [
+  { id: 'MC-001', name: 'WG-825 Wire Bending', area: 'Satys • Wire Harness', status: 'Monitor length stability', nextPm: 'Weekly check' },
+  { id: 'MC-002', name: 'Komax Gamma 253/255', area: 'Production', status: 'PM ready', nextPm: 'Monthly PM' },
+  { id: 'MC-003', name: 'Injection 40 Ton Trial', area: 'Evaluation', status: 'Trial machine', nextPm: 'Trial review' },
 ];
 
-const calendarDays = [
-  { day: 'Mon', date: '22', focus: 'PM', status: 'done' },
-  { day: 'Tue', date: '23', focus: 'Finance', status: 'done' },
-  { day: 'Wed', date: '24', focus: 'Vehicle', status: 'done' },
-  { day: 'Thu', date: '25', focus: 'AI Build', status: 'active' },
-  { day: 'Fri', date: '26', focus: 'Sprint 5', status: 'active' },
-  { day: 'Sat', date: '27', focus: 'Health', status: 'todo' },
-  { day: 'Sun', date: '28', focus: 'Planning', status: 'todo' },
+const timeline = [
+  '08:00 Satys work / machine follow up',
+  '12:00 Log food + finance',
+  '17:30 Review vehicle / expense',
+  '21:00 Gym + Health check',
 ];
 
-function App() {
-  const [view, setView] = useState<ViewKey>('dashboard');
-  const [query, setQuery] = useState('');
+function StatusPill({ children }: { children: React.ReactNode }) {
+  return <span className="status-pill">{children}</span>;
+}
 
-  const activeTitle = useMemo(() => navItems.find((n) => n.key === view)?.label ?? 'Dashboard', [view]);
+function Header() {
+  return (
+    <header className="hero-card">
+      <div>
+        <p className="eyebrow">TUK LIFE OS v6 • Sprint 6</p>
+        <h1>Vehicle + Satys Work Command Center</h1>
+        <p className="hero-copy">Dashboard นี้เป็น Sprint 6 ถ้าเห็นหน้านี้ แปลว่าโค้ดใหม่ถูกติดตั้งแล้ว ✅</p>
+      </div>
+      <div className="sync-box">
+        <span>Google Sheets</span>
+        <strong>Ready</strong>
+        <small>Vehicle / Work / Timeline</small>
+      </div>
+    </header>
+  );
+}
+
+function Dashboard() {
+  const totalMonthlyVehicleCost = useMemo(() => '฿22,647', []);
+  return (
+    <section className="page-grid">
+      <Header />
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <span>Vehicles</span>
+          <strong>2</strong>
+          <small>BYD Seal 7 + Honda City</small>
+        </div>
+        <div className="stat-card">
+          <span>Vehicle Cost</span>
+          <strong>{totalMonthlyVehicleCost}</strong>
+          <small>monthly loan tracking</small>
+        </div>
+        <div className="stat-card">
+          <span>Satys Machines</span>
+          <strong>3</strong>
+          <small>PM / trial / issue follow up</small>
+        </div>
+        <div className="stat-card">
+          <span>AI Actions</span>
+          <strong>6</strong>
+          <small>scan, voice, add, sync</small>
+        </div>
+      </div>
+
+      <div className="two-column">
+        <section className="panel">
+          <div className="panel-head">
+            <h2>🚗 Vehicle Overview</h2>
+            <StatusPill>Database ready</StatusPill>
+          </div>
+          <div className="list-stack">
+            {vehicles.map((vehicle) => (
+              <article className="list-item" key={vehicle.id}>
+                <div>
+                  <strong>{vehicle.name}</strong>
+                  <p>{vehicle.model}</p>
+                </div>
+                <div className="item-meta">
+                  <span>{vehicle.cost}</span>
+                  <small>{vehicle.nextService}</small>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <h2>🏢 Satys Work</h2>
+            <StatusPill>PM/BM tracker</StatusPill>
+          </div>
+          <div className="list-stack">
+            {machines.map((machine) => (
+              <article className="list-item" key={machine.id}>
+                <div>
+                  <strong>{machine.name}</strong>
+                  <p>{machine.area}</p>
+                </div>
+                <div className="item-meta">
+                  <span>{machine.nextPm}</span>
+                  <small>{machine.status}</small>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2>⚡ Quick Actions</h2>
+          <StatusPill>Mobile ready</StatusPill>
+        </div>
+        <div className="action-grid">
+          <button>+ Add Vehicle</button>
+          <button>+ Add Machine</button>
+          <button>📷 Scan Receipt</button>
+          <button>🎤 Voice AI</button>
+          <button>📅 Add PM</button>
+          <button>☁️ Sync Sheets</button>
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function VehiclePage() {
+  return (
+    <section className="page-grid">
+      <div className="section-title">
+        <p className="eyebrow">Vehicle Database</p>
+        <h1>รถทั้งหมดของคุณ</h1>
+        <p>ออกแบบให้ต่อกับ Google Sheets แท็บ Vehicles ใน Sprint ถัดไป</p>
+      </div>
+      <div className="card-grid">
+        {vehicles.map((vehicle) => (
+          <article className="feature-card" key={vehicle.id}>
+            <span>{vehicle.id}</span>
+            <h2>{vehicle.name}</h2>
+            <p>{vehicle.model}</p>
+            <ul>
+              <li>Status: {vehicle.status}</li>
+              <li>Next: {vehicle.nextService}</li>
+              <li>Cost: {vehicle.cost}</li>
+            </ul>
+            <button className="secondary-btn">View Details</button>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function WorkPage() {
+  return (
+    <section className="page-grid">
+      <div className="section-title">
+        <p className="eyebrow">Satys Work Database</p>
+        <h1>เครื่องจักร / PM / BM / Supplier</h1>
+        <p>หน้านี้เตรียมสำหรับเก็บงาน Satys, เครื่องจักร, PM/BM, Trial และ Supplier</p>
+      </div>
+      <div className="card-grid">
+        {machines.map((machine) => (
+          <article className="feature-card" key={machine.id}>
+            <span>{machine.id}</span>
+            <h2>{machine.name}</h2>
+            <p>{machine.area}</p>
+            <ul>
+              <li>PM: {machine.nextPm}</li>
+              <li>Note: {machine.status}</li>
+            </ul>
+            <button className="secondary-btn">Open Work Record</button>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TimelinePage() {
+  return (
+    <section className="page-grid">
+      <div className="section-title">
+        <p className="eyebrow">Universal Timeline</p>
+        <h1>ไทม์ไลน์วันนี้</h1>
+      </div>
+      <div className="timeline-line">
+        {timeline.map((item, index) => (
+          <div className="timeline-row" key={item}>
+            <div className="timeline-dot">{index + 1}</div>
+            <p>{item}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SettingsPage() {
+  return (
+    <section className="page-grid">
+      <div className="section-title">
+        <p className="eyebrow">Settings Center</p>
+        <h1>ตั้งค่าระบบ</h1>
+        <p>Google Sheets, Drive, Backup, AI, Security จะถูกเชื่อมจริงใน Sprint ถัดไป</p>
+      </div>
+      <div className="card-grid">
+        {['Google Sheets', 'Google Drive', 'AI Voice', 'AI Camera', 'Backup / Restore', 'Security'].map((item) => (
+          <article className="feature-card" key={item}>
+            <span>Ready</span>
+            <h2>{item}</h2>
+            <p>เตรียมโครงสร้างไว้สำหรับเชื่อมต่อจริง</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export default function App() {
+  const [active, setActive] = useState<NavKey>('dashboard');
+  const screens: Record<NavKey, React.ReactNode> = {
+    dashboard: <Dashboard />,
+    vehicle: <VehiclePage />,
+    work: <WorkPage />,
+    timeline: <TimelinePage />,
+    settings: <SettingsPage />,
+  };
+
+  const navItems: { key: NavKey; label: string; icon: string }[] = [
+    { key: 'dashboard', label: 'Home', icon: '🏠' },
+    { key: 'vehicle', label: 'Vehicle', icon: '🚗' },
+    { key: 'work', label: 'Satys', icon: '🏢' },
+    { key: 'timeline', label: 'Timeline', icon: '📅' },
+    { key: 'settings', label: 'Settings', icon: '⚙️' },
+  ];
 
   return (
-    <main className="os-shell">
+    <main className="app-shell">
       <aside className="sidebar">
-        <div className="brand-card">
-          <div className="brand-icon">T</div>
+        <div className="brand-block">
+          <div className="logo-mark">T</div>
           <div>
-            <h1>TUK LIFE OS</h1>
-            <p>v6 Sprint 5 Health + Finance</p>
+            <strong>TUK LIFE OS</strong>
+            <small>v6 Sprint 6</small>
           </div>
         </div>
-        <nav className="side-nav">
+        <nav>
           {navItems.map((item) => (
-            <button key={item.key} className={view === item.key ? 'active' : ''} onClick={() => setView(item.key)}>
+            <button className={active === item.key ? 'nav-active' : ''} key={item.key} onClick={() => setActive(item.key)}>
               <span>{item.icon}</span>
               {item.label}
             </button>
@@ -67,28 +281,11 @@ function App() {
         </nav>
       </aside>
 
-      <section className="content">
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">Sprint 5 installed ✅</p>
-            <h2>{activeTitle}</h2>
-            <span>Dashboard นี้เป็น Sprint 5 ถ้าเห็นหน้านี้ แปลว่าโค้ดใหม่ถูกติดตั้งแล้ว ✅</span>
-          </div>
-          <div className="top-actions">
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ถาม AI / ค้นหาชีวิต..." />
-            <button>+ Quick Add</button>
-          </div>
-        </header>
-
-        {view === 'dashboard' && <Dashboard setView={setView} />}
-        {view === 'calendar' && <CalendarView />}
-        {view === 'timeline' && <TimelineView />}
-        {view !== 'dashboard' && view !== 'calendar' && view !== 'timeline' && <ModuleView view={view} />}
-      </section>
+      <section className="content-shell">{screens[active]}</section>
 
       <nav className="bottom-nav">
-        {navItems.slice(0, 5).map((item) => (
-          <button key={item.key} className={view === item.key ? 'active' : ''} onClick={() => setView(item.key)}>
+        {navItems.map((item) => (
+          <button className={active === item.key ? 'nav-active' : ''} key={item.key} onClick={() => setActive(item.key)}>
             <span>{item.icon}</span>
             <small>{item.label}</small>
           </button>
@@ -97,138 +294,3 @@ function App() {
     </main>
   );
 }
-
-function Dashboard({ setView }: { setView: (v: ViewKey) => void }) {
-  return (
-    <div className="grid dashboard-grid">
-      <section className="hero-card wide">
-        <p className="eyebrow">AI Powered Personal Operating System</p>
-        <h3>สวัสดี TUK — วันนี้ระบบพร้อมทำงาน</h3>
-        <p>รวมสุขภาพ การเงิน รถ งาน Satys ปฏิทิน และ Timeline ไว้ในที่เดียว</p>
-        <div className="hero-actions">
-          <button onClick={() => setView('timeline')}>เปิด Timeline</button>
-          <button onClick={() => setView('calendar')} className="secondary">เปิด Calendar</button>
-        </div>
-      </section>
-
-      <MetricCard title="Today Focus" value="5 Tasks" note="งานสำคัญวันนี้" icon="🔥" />
-      <MetricCard title="Health" value="Active" note="พร้อมบันทึกอาหารและฟิตเนส" icon="❤️" />
-      <MetricCard title="Finance" value="Track" note="ตรวจรายรับรายจ่าย" icon="💰" />
-      <MetricCard title="AI Brain" value="Online" note="พร้อมตอบจากฐานข้อมูล" icon="🤖" />
-
-      <section className="panel wide">
-        <div className="section-head">
-          <h3>Today Calendar</h3>
-          <button onClick={() => setView('calendar')}>ดูทั้งหมด</button>
-        </div>
-        <div className="calendar-strip">
-          {calendarDays.map((d) => (
-            <div className={`day-card ${d.status}`} key={d.date}>
-              <b>{d.day}</b>
-              <strong>{d.date}</strong>
-              <span>{d.focus}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="panel wide">
-        <div className="section-head">
-          <h3>Timeline ล่าสุด</h3>
-          <button onClick={() => setView('timeline')}>เพิ่ม Timeline</button>
-        </div>
-        <div className="timeline-list compact">
-          {timeline.map((item) => (
-            <article key={item.id}>
-              <time>{item.time}</time>
-              <div>
-                <h4>{item.title}</h4>
-                <p>{item.note}</p>
-              </div>
-              <span>{item.type}</span>
-            </article>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function CalendarView() {
-  return (
-    <div className="page-stack">
-      <section className="panel wide">
-        <p className="eyebrow">Sprint 5 Feature</p>
-        <h3>📅 Smart Calendar</h3>
-        <p>ปฏิทินสำหรับดูย้อนหลัง บันทึกเป้าหมาย งาน สุขภาพ การเงิน รถ และ Timeline รายวัน</p>
-        <div className="month-grid">
-          {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => (
-            <button key={date} className={date === 26 ? 'today' : date % 5 === 0 ? 'has-event' : ''}>
-              <strong>{date}</strong>
-              <span>{date === 26 ? 'Sprint 5' : date % 5 === 0 ? 'Event' : ''}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function TimelineView() {
-  return (
-    <div className="page-stack">
-      <section className="panel wide">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow">Sprint 5 Feature</p>
-            <h3>🕒 Life Timeline</h3>
-          </div>
-          <button>+ Add Timeline</button>
-        </div>
-        <div className="timeline-list">
-          {timeline.concat(timeline).map((item, index) => (
-            <article key={`${item.id}-${index}`}>
-              <time>{item.time}</time>
-              <div>
-                <h4>{item.title}</h4>
-                <p>{item.note}</p>
-              </div>
-              <span>{item.type}</span>
-            </article>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function ModuleView({ view }: { view: ViewKey }) {
-  const item = navItems.find((n) => n.key === view);
-  return (
-    <div className="page-stack">
-      <section className="panel wide module-panel">
-        <p className="eyebrow">TUK LIFE OS v6</p>
-        <h3>{item?.icon} {item?.label}</h3>
-        <p>โมดูลนี้เตรียมไว้สำหรับ Sprint ถัดไป จะเชื่อม Google Sheets, Google Drive และ AI Memory</p>
-        <div className="module-actions">
-          <button>เพิ่มข้อมูล</button>
-          <button className="secondary">แก้ไขข้อมูล</button>
-          <button className="secondary">Sync Google Sheets</button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function MetricCard({ title, value, note, icon }: { title: string; value: string; note: string; icon: string }) {
-  return (
-    <section className="metric-card">
-      <span>{icon}</span>
-      <p>{title}</p>
-      <h3>{value}</h3>
-      <small>{note}</small>
-    </section>
-  );
-}
-
-export default App;
