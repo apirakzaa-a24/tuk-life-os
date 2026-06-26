@@ -1,0 +1,6 @@
+{
+  "name": "TUK LIFE OS Database Architect",
+  "description": "Enterprise-grade Google Sheets database architect, schema map, validation builder, and Apps Script generator for the TUK LIFE OS Personal Operating System.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
