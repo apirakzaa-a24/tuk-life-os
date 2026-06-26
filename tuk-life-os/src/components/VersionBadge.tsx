@@ -1,23 +1,11 @@
-import React from "react";
-import { ShieldCheck } from "lucide-react";
+import { appVersion } from '../data/mockData';
 
-export type BuildInfo = {
-  app: string;
-  version: string;
-  sprint: string;
-  buildDate: string;
-  buildName: string;
-  status: string;
-};
-
-export function VersionBadge({ build }: { build: BuildInfo }) {
+export function VersionBadge() {
   return (
-    <div className="version-badge" title="System Version">
-      <ShieldCheck size={16} />
-      <div>
-        <strong>{build.version}</strong>
-        <span>{build.sprint} · {build.buildDate}</span>
-      </div>
+    <div className="versionBadge" title={appVersion.codename}>
+      <strong>{appVersion.version}</strong>
+      <span>{appVersion.sprint}</span>
+      <small>Build {appVersion.build}</small>
     </div>
   );
 }
