@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { AppDataProvider, useAppData } from './context/AppDataProvider';
 import { MODULES, MODULE_MAP } from './data/modules';
 import type { LifeRecord, ModuleKey, Priority, RecordKind, Status } from './types/database';
-import { AIAssistant } from './ai';
+import AIAssistant from './AIAssistant';
 import './style.css';
 const pageModules=MODULES;
 const now=()=>new Date().toISOString();
