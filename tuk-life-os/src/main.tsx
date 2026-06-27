@@ -89,7 +89,7 @@ function App(){
       priority:'medium',
       status:'active',
       tags:['ai',...(entry.tags||[])],
-      fields:{source:'AI Assistant',inputType:entry.inputType,aiEntryId:entry.id},
+      fields:{source:'AI Assistant',inputType:entry.inputType,aiEntryId:entry.id,aiConfidence:entry.confidence||0,attachments:JSON.stringify((entry.attachments||[]).map(file=>({id:file.id,name:file.name,type:file.type,kind:file.kind,size:file.size,compressedSize:file.compressedSize,compressionRatio:file.compressionRatio,thumbnail:file.thumbnail,dataUrl:file.dataUrl}))),extractedFields:JSON.stringify(entry.extractedFields||[])},
       progress:0,
       linkedTo:[{module:'notes' as ModuleKey,note:t.createdFromAI}],
       createdAt:now(),

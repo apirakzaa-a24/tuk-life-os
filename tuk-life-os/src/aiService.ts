@@ -1,38 +1,51 @@
-import type { AIEntry, AIInputType, AIModuleTarget, AIQuickCommandResult, AIRecordKind } from './aiTypes';
+import type { AIAnalysisResult, AIAttachment, AIEntry, AIInputType, AIModuleTarget, AIRecordKind } from './aiTypes';
 
-const STORAGE_KEY = 'tuk_os_ai_entries_v1';
+const STORAGE_KEY = 'tuk_os_ai_entries_v2';
+const LEGACY_KEY = 'tuk_os_ai_entries_v1';
 
 const moduleKeywords: Record<AIModuleTarget, string[]> = {
-  dashboard: ['dashboard', 'สรุป', 'ภาพรวม'],
-  finance: ['เงิน', 'รายจ่าย', 'รายรับ', 'หนี้', 'ผ่อน', 'บัตร', 'บาท', 'thb', 'ราคา', 'งบ', 'ลงทุน', 'ค่าใช้จ่าย'],
-  health: ['สุขภาพ', 'น้ำหนัก', 'ป่วย', 'ยา', 'นอน', 'แคลอรี', 'อาหาร', 'ความดัน', 'น้ำตาล', 'kg', 'kcal'],
-  fitness: ['ออกกำลังกาย', 'วิ่ง', 'เวท', 'ยิม', 'กระโดดเชือก', 'jump', 'rope', 'workout', 'run', 'kcal'],
-  travel: ['เที่ยว', 'ทริป', 'บิน', 'โรงแรม', 'visa', 'passport', 'beijing', 'hanoi', 'ญี่ปุ่น', 'เดินทาง'],
-  vehicle: ['รถ', 'byd', 'honda', 'ยาง', 'ซ่อม', 'ประกันรถ', 'ภาษีรถ', 'ชาร์จ', 'ev'],
-  work: ['งาน', 'satys', 'supplier', 'po', 'email', 'หัวหน้า', 'ประชุม', 'follow'],
-  machine: ['เครื่องจักร', 'motor', 'komax', 'wg-825', 'trd801', 'injection', 'pm', 'bm', 'สกรู'],
-  learning: ['เรียน', 'อังกฤษ', 'จีน', 'ศัพท์', 'speaking', 'ภาษา'],
-  home: ['บ้าน', 'ห้อง', 'เช่า', 'ตกแต่ง', 'โซฟา', 'ตู้', 'ไฟ'],
-  family: ['ลูก', 'แฟน', 'ครอบครัว', 'เด็ก', 'นัดหมอ'],
-  goals: ['เป้าหมาย', 'goal', 'mission', 'สำเร็จ'],
-  habits: ['habit', 'กิจวัตร', 'ทุกวัน', 'streak'],
-  winfile: ['win', 'สำเร็จ', 'achievement', 'ภูมิใจ'],
-  notes: ['note', 'โน้ต', 'จด', 'ข้อความ', 'ไอเดีย'],
-  shopping: ['ซื้อ', 'ของ', 'shopping', 'ราคา', 'ลิสต์'],
-  documents: ['เอกสาร', 'resume', 'pdf', 'ใบ', 'สัญญา', 'คู่มือ'],
-  reminders: ['เตือน', 'นัด', 'deadline', 'ตาม', 'รอ', 'remind'],
+  finance: ['เงิน', 'รายจ่าย', 'รายรับ', 'หนี้', 'ผ่อน', 'บัตร', 'บาท', 'thb', 'ราคา', 'งบ', 'ลงทุน', 'ค่าใช้จ่าย', 'receipt', 'invoice', 'total', 'vat'],
+  health: ['สุขภาพ', 'น้ำหนัก', 'ป่วย', 'ยา', 'นอน', 'แคลอรี', 'อาหาร', 'ความดัน', 'น้ำตาล', 'kg', 'kcal', 'bmi', 'calorie'],
+  fitness: ['ออกกำลังกาย', 'วิ่ง', 'เวท', 'ยิม', 'กระโดดเชือก', 'jump', 'rope', 'workout', 'run', 'steps', 'ก้าว'],
+  travel: ['เที่ยว', 'ทริป', 'บิน', 'โรงแรม', 'visa', 'passport', 'beijing', 'hanoi', 'ญี่ปุ่น', 'เดินทาง', 'booking', 'flight'],
+  vehicle: ['รถ', 'byd', 'honda', 'ยาง', 'ซ่อม', 'ประกันรถ', 'ภาษีรถ', 'ชาร์จ', 'ev', 'ไมล์', 'น้ำมัน'],
+  work: ['งาน', 'satys', 'supplier', 'po', 'email', 'หัวหน้า', 'ประชุม', 'follow', 'meeting', 'ลูกค้า'],
+  machine: ['เครื่องจักร', 'motor', 'komax', 'wg-825', 'trd801', 'injection', 'pm', 'bm', 'สกรู', 'maintenance', 'error'],
+  learning: ['เรียน', 'อังกฤษ', 'จีน', 'ศัพท์', 'speaking', 'ภาษา', 'study'],
+  home: ['บ้าน', 'ห้อง', 'เช่า', 'ตกแต่ง', 'โซฟา', 'ตู้', 'ไฟ', 'ซ่อมบ้าน'],
+  family: ['ลูก', 'แฟน', 'ครอบครัว', 'เด็ก', 'นัดหมอ', 'baby'],
+  goals: ['เป้าหมาย', 'goal', 'mission', 'ลด', 'เพิ่ม', 'ภายใน'],
+  habits: ['habit', 'กิจวัตร', 'ทุกวัน', 'streak', 'น้ำ', 'ดื่มน้ำ'],
+  winfile: ['win', 'สำเร็จ', 'achievement', 'ภูมิใจ', 'ผลงาน', 'หลักฐาน'],
+  notes: ['note', 'โน้ต', 'จด', 'ข้อความ', 'ไอเดีย', 'idea'],
+  shopping: ['ซื้อ', 'ของ', 'shopping', 'ราคา', 'ลิสต์', 'product', 'สินค้า'],
+  documents: ['เอกสาร', 'resume', 'pdf', 'ใบ', 'สัญญา', 'คู่มือ', 'document', 'scan'],
+  reminders: ['เตือน', 'นัด', 'deadline', 'ตาม', 'รอ', 'remind', 'due', 'appointment'],
 };
 
-function id(): string {
-  return `ai_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+function id(prefix = 'ai'): string {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 function normalize(text: string): string {
   return text.toLowerCase().trim();
 }
 
-export function detectTargetModule(text: string): AIModuleTarget {
-  const value = normalize(text);
+function safeJson<T>(raw: string | null, fallback: T): T {
+  try {
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function createAttachmentId(): string {
+  return id('att');
+}
+
+export function detectTargetModule(text: string, attachments: AIAttachment[] = []): AIModuleTarget {
+  const attachmentText = attachments.map((file) => `${file.name} ${file.type} ${file.textContent || ''}`).join(' ');
+  const value = normalize(`${text} ${attachmentText}`);
   let best: AIModuleTarget = 'notes';
   let bestScore = 0;
 
@@ -43,21 +56,27 @@ export function detectTargetModule(text: string): AIModuleTarget {
       best = module;
     }
   }
+
+  const hasImage = attachments.some((file) => file.kind === 'image');
+  if (bestScore === 0 && hasImage) return 'documents';
   return best;
 }
 
-export function detectKind(text: string): AIRecordKind {
+export function detectKind(text: string, inputType: AIInputType, target: AIModuleTarget): AIRecordKind {
   const value = normalize(text);
-  if (/(จ่าย|ซื้อ|ราคา|บาท|thb|ผ่อน|รายรับ|รายจ่าย)/i.test(value)) return 'transaction';
+  if (inputType === 'calculator') return target === 'finance' ? 'transaction' : 'metric';
+  if (/(จ่าย|ซื้อ|ราคา|บาท|thb|ผ่อน|รายรับ|รายจ่าย|total|vat|receipt|invoice)/i.test(value)) return 'transaction';
   if (/(เป้าหมาย|goal|ลด|เพิ่ม|ภายใน|target)/i.test(value)) return 'goal';
-  if (/(ต้อง|todo|ทำ|ตาม|รอ|deadline|เตือน)/i.test(value)) return 'task';
-  if (/(น้ำหนัก|kg|kcal|กิโล|ชั่วโมง|ครั้ง|เปอร์เซ็น|%)/i.test(value)) return 'metric';
+  if (/(ต้อง|todo|ทำ|ตาม|รอ|deadline|เตือน|นัด)/i.test(value)) return 'task';
+  if (/(น้ำหนัก|kg|kcal|กิโล|ชั่วโมง|ครั้ง|เปอร์เซ็น|%|bmi|steps|ก้าว)/i.test(value)) return 'metric';
   if (/(แผน|plan|ทริป|ตาราง|schedule)/i.test(value)) return 'plan';
+  if (/(เอกสาร|pdf|scan|ใบ|สัญญา|คู่มือ)/i.test(value)) return 'document';
+  if (target === 'reminders') return 'reminder';
   return 'note';
 }
 
 export function extractAmount(text: string): { amount?: number; unit?: string } {
-  const match = text.match(/([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+)\s*(บาท|thb|kg|กก|kcal|cal|km|กม|ครั้ง|%|เปอร์เซ็นต์)?/i);
+  const match = text.match(/([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+)\s*(บาท|thb|kg|กก|kcal|cal|km|กม|ครั้ง|ก้าว|steps|%|เปอร์เซ็นต์)?/i);
   if (!match) return {};
   return {
     amount: Number(match[1].replace(/,/g, '')),
@@ -65,22 +84,43 @@ export function extractAmount(text: string): { amount?: number; unit?: string } 
   };
 }
 
-export function analyzeText(text: string, inputType: AIInputType = 'chat'): AIQuickCommandResult {
-  const targetModule = detectTargetModule(text);
-  const kind = detectKind(text);
+function extractFields(text: string, attachments: AIAttachment[], amount?: number, unit?: string) {
+  const fields = [] as AIAnalysisResult['extractedFields'];
+  if (amount !== undefined) fields.push({ key: 'amount', label: 'amount', value: amount, confidence: 92 });
+  if (unit) fields.push({ key: 'unit', label: 'unit', value: unit, confidence: 88 });
+  if (attachments.length) fields.push({ key: 'attachments', label: 'files', value: attachments.length, confidence: 99 });
+  const dateMatch = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|วันนี้|พรุ่งนี้|today|tomorrow)/i);
+  if (dateMatch) fields.push({ key: 'dateText', label: 'date', value: dateMatch[1], confidence: 80 });
+  const lower = normalize(text);
+  if (lower.includes('receipt') || lower.includes('ใบเสร็จ') || attachments.some((file) => /receipt|invoice|bill/i.test(file.name))) {
+    fields.push({ key: 'documentType', label: 'document type', value: 'receipt/invoice', confidence: 78 });
+  }
+  return fields;
+}
+
+export function analyzeText(text: string, inputType: AIInputType = 'chat', attachments: AIAttachment[] = [], forcedTarget?: AIModuleTarget): AIAnalysisResult {
+  const targetModule = forcedTarget || detectTargetModule(text, attachments);
+  const kind = detectKind(text, inputType, targetModule);
   const amount = extractAmount(text);
-  const shortText = text.trim().slice(0, 80) || 'AI Note';
-  const tags = [targetModule, kind].filter(Boolean);
+  const source = text.trim() || (attachments.length ? `วิเคราะห์ไฟล์ ${attachments.map((file) => file.name).join(', ')}` : 'AI Note');
+  const shortText = source.slice(0, 90);
+  const attachmentTags = attachments.map((file) => file.kind).filter(Boolean);
+  const tags = Array.from(new Set(['ai', targetModule, kind, inputType, ...attachmentTags]));
+  const confidence = Math.min(99, 62 + (amount.amount !== undefined ? 12 : 0) + (attachments.length ? 15 : 0) + (targetModule !== 'notes' ? 10 : 0));
+  const fields = extractFields(source, attachments, amount.amount, amount.unit);
 
   return {
     targetModule,
     kind,
     title: shortText,
-    summary: `AI วิเคราะห์ว่าเกี่ยวกับ ${targetModule} ประเภท ${kind}`,
-    suggestedAction: `บันทึกข้อมูลนี้เข้าโมดูล ${targetModule} และตรวจรายละเอียดอีกครั้ง`,
+    summary: `AI วิเคราะห์แล้วควรบันทึกเข้า ${targetModule} ประเภท ${kind}${attachments.length ? ` พร้อมไฟล์แนบ ${attachments.length} ไฟล์` : ''}`,
+    aiSummary: `AI วิเคราะห์แล้วควรบันทึกเข้า ${targetModule} ประเภท ${kind}${attachments.length ? ` พร้อมไฟล์แนบ ${attachments.length} ไฟล์` : ''}`,
+    suggestedAction: confidence >= 80 ? 'ตรวจสอบข้อมูลแล้วกดบันทึกเข้าระบบหลัก' : 'ข้อมูลยังไม่ชัด ควรตรวจทานก่อนบันทึก หรือบันทึกเป็น Notes',
     amount: amount.amount,
     unit: amount.unit,
     tags,
+    confidence,
+    extractedFields: fields,
   };
 }
 
@@ -102,42 +142,40 @@ export function createAIEntry(params: {
   inputType: AIInputType;
   text: string;
   targetModule?: AIModuleTarget;
-  attachmentName?: string;
-  attachmentPreview?: string;
+  attachments?: AIAttachment[];
 }): AIEntry {
-  const analyzed = analyzeText(params.text, params.inputType);
+  const attachments = params.attachments || [];
+  const analyzed = analyzeText(params.text, params.inputType, attachments, params.targetModule);
   const now = new Date().toISOString();
   return {
     id: id(),
     createdAt: now,
     updatedAt: now,
     inputType: params.inputType,
-    targetModule: params.targetModule || analyzed.targetModule,
-    kind: analyzed.kind,
-    title: analyzed.title,
     originalText: params.text,
-    aiSummary: analyzed.summary,
-    suggestedAction: analyzed.suggestedAction,
-    amount: analyzed.amount,
-    unit: analyzed.unit,
-    tags: analyzed.tags,
-    linkedTo: [params.targetModule || analyzed.targetModule],
-    attachmentName: params.attachmentName,
-    attachmentPreview: params.attachmentPreview,
+    ...analyzed,
+    linkedTo: [analyzed.targetModule],
+    attachments,
+    attachmentName: attachments[0]?.name,
+    attachmentPreview: attachments[0]?.thumbnail || attachments[0]?.dataUrl,
   };
 }
 
 export function getAIEntries(): AIEntry[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+  const current = safeJson<AIEntry[]>(localStorage.getItem(STORAGE_KEY), []);
+  if (current.length) return current;
+  const legacy = safeJson<any[]>(localStorage.getItem(LEGACY_KEY), []);
+  return legacy.map((entry) => ({ ...entry, attachments: [], confidence: 60, extractedFields: [] })) as AIEntry[];
 }
 
 export function saveAIEntry(entry: AIEntry): AIEntry[] {
-  const next = [entry, ...getAIEntries()];
+  const next = [entry, ...getAIEntries()].slice(0, 300);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  return next;
+}
+
+export function updateAIEntry(entry: AIEntry): AIEntry[] {
+  const next = getAIEntries().map((item) => (item.id === entry.id ? { ...entry, updatedAt: new Date().toISOString() } : item));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   return next;
 }
