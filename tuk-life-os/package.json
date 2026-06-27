@@ -1,11 +1,11 @@
 {
-  "name": "tuk-life-os-v7-professional",
+  "name": "tuk-life-os-v1-professional",
   "private": true,
-  "version": "7.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "NODE_ENV=production vite build && esbuild server.ts --bundle --platform=node --outfile=dist/server.cjs --format=cjs",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --outfile=dist/server.cjs",
     "start": "node dist/server.cjs"
   },
   "dependencies": {
@@ -15,13 +15,8 @@
     "tsx": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "lucide-react": "latest",
     "express": "latest",
-    "dotenv": "latest"
+    "esbuild": "latest"
   },
-  "devDependencies": {
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "@types/express": "latest"
-  }
+  "devDependencies": {}
 }

@@ -1,2 +1,0 @@
-const items=['Dashboard','Life Vault','Timeline','Calendar','AI Assistant','Camera AI','Voice AI','Health','Finance','Vehicles','Satys Work','Settings'];
-export default function Sidebar({active,setActive}:{active:string,setActive:(v:string)=>void}){return <aside className="sidebar"><div className="brand"><div className="logo">T</div><div><h1>TUK LIFE OS</h1><p>Personal Operating System</p></div></div><nav>{items.map(i=><button key={i} onClick={()=>setActive(i)} className={active===i?'active':''}>{i}</button>)}</nav></aside>}

@@ -1,1 +1,0 @@
-export default function GenericPage({title,desc}:{title:string,desc:string}){return <main className="page"><section className="hero"><div><span className="pill">v7 Module</span><h1>{title}</h1><p>{desc}</p></div></section><section className="panel"><h2>สถานะโมดูล</h2><p>โครงสร้างพร้อมแล้ว ขั้นต่อไปจะเชื่อมข้อมูลจริงกับ Google Sheets / Google Drive และ AI</p></section></main>}
